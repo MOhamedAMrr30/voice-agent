@@ -493,11 +493,11 @@
                                 responseEl.innerHTML = responseText + ` <a href="${fixedLink}" target="_blank" style="color: #339af0; text-decoration: underline; font-weight: bold;">View in Google Calendar</a>`;
                             }
                         } else {
-                            // Check if there was an error
+                            // Check if there was an error (but don't show it in the response)
                             if (data.calendar_error || (data.calendar_sync && !data.calendar_sync.success)) {
-                                const errorMsg = data.calendar_error || (data.calendar_sync && data.calendar_sync.error) || 'Unknown error';
-                                responseText += `\n\n⚠️ Note: Could not add to Google Calendar (${errorMsg})`;
-                                textForSpeech = responseText; // Include error in speech
+                                // Error occurred but we still booked the appointment locally
+                                // Don't add error message to user response - just keep the success message
+                                console.log('Calendar sync error (not shown to user):', data.calendar_error || data.calendar_sync.error);
                             }
                             responseEl.textContent = responseText;
                         }

@@ -252,7 +252,6 @@ def book_appointment():
         response["calendar_sync"] = calendar_sync_result
         
         if calendar_sync_result.get('success'):
-            response["message"] += " and added to Google Calendar"
             html_link = calendar_sync_result.get('html_link')
             if html_link:
                 response["calendar_link"] = html_link
@@ -268,12 +267,10 @@ def book_appointment():
         else:
             error_msg = calendar_sync_result.get('error', 'Unknown error')
             response["calendar_error"] = error_msg
-            response["message"] += " (but failed to sync with Google Calendar)"
             print(f"[ERROR] Calendar sync failed: {error_msg}")
     
     elif calendar_error:
         response["calendar_error"] = calendar_error
-        response["message"] += " (but failed to sync with Google Calendar)"
         print(f"[ERROR] Calendar error: {calendar_error}")
     
     return jsonify(response), 201
