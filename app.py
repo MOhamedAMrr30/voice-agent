@@ -64,7 +64,10 @@ def query_schedule():
     
     results = []
     
-    if 'today' in query:
+    if 'after tomorrow' in query or 'day after tomorrow' in query:
+        day_after_tomorrow_str = (datetime.now() + timedelta(days=2)).strftime('%Y-%m-%d')
+        results = [a for a in appointments if a.get('date') == day_after_tomorrow_str]
+    elif 'today' in query:
         today_str = datetime.now().strftime('%Y-%m-%d')
         results = [a for a in appointments if a.get('date') == today_str]
     elif 'tomorrow' in query:
@@ -124,12 +127,16 @@ def parse_voice_command(text):
     
     # Fallback to keyword matching
     if not parsed_date:
-        if 'today' in text_lower:
+        if 'after tomorrow' in text_lower or 'day after tomorrow' in text_lower:
+            parsed_date = datetime.now() + timedelta(days=2)
+        elif 'today' in text_lower:
             parsed_date = datetime.now()
         elif 'tomorrow' in text_lower:
             parsed_date = datetime.now() + timedelta(days=1)
         elif 'next week' in text_lower:
             parsed_date = datetime.now() + timedelta(days=7)
+        elif 'day after' in text_lower:
+            parsed_date = datetime.now() + timedelta(days=2)
         else:
             date_pattern = r'(\d{1,2})[/-](\d{1,2})[/-](\d{2,4})'
             date_match = re.search(date_pattern, text)
