@@ -1,0 +1,185 @@
+{
+  "name": "AI Voice → Google Calendar Booking (Cleaned)",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "webhook-node",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300],
+      "webhookId": "ai-booking"
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "resource": "event",
+        "operation": "getAll",
+        "calendarId": "primary",
+        "options": {
+          "maxResults": 50,
+          "timeMin": "={{ new Date().toISOString() }}"
+        }
+      },
+      "id": "calendar-list-node",
+      "name": "Calendar - List (check)",
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 1,
+      "position": [450, 300],
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "1",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.action }}",
+              "operation": "equals",
+              "value2": "create_calendar_event"
+            }
+          ]
+        }
+      },
+      "id": "if-conflict-node",
+      "name": "IF - conflict?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "resource": "event",
+        "operation": "create",
+        "calendarId": "primary",
+        "title": "={{ $json.appointment?.title || $json.title || 'Appointment' }}",
+        "start": "={{ $json.start || $json.startISO || ($json.appointment?.start) || '' }}",
+        "end": "={{ $json.end || $json.endISO || ($json.appointment?.end) || '' }}",
+        "additionalFields": {
+          "description": "={{ $json.appointment?.description || $json.description || 'Created via Voice Automation Agent' }}"
+        }
+      },
+      "id": "calendar-create-node",
+      "name": "Calendar - Create Event",
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 1,
+      "position": [850, 150],
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "1",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Robust alternatives generator (replace the existing code in Generate Alternatives)\nconst input = $json || {};\n\n// Helper: try to parse common date string formats into a Date object\nfunction tryParseDate(s) {\n  if (!s) return null;\n  let t = String(s).trim();\n\n  // If format like 'YYYY-MM-DD HH:MM' -> convert first space to 'T'\n  if (/^\\d{4}-\\d{2}-\\d{2}\\s+\\d{1,2}[:]/.test(t)) {\n    t = t.replace(' ', 'T');\n  }\n\n  // If no timezone indicator (Z or ±HH:MM), append Z (assume UTC)\n  if (!/[zZ]$/.test(t) && !/[+\\-]\\d{2}:\\d{2}$/.test(t)) {\n    t = t + 'Z';\n  }\n\n  const d = new Date(t);\n  if (!isNaN(d)) return d;\n\n  // Last fallback: try original string\n  const d2 = new Date(String(s));\n  if (!isNaN(d2)) return d2;\n\n  return null;\n}\n\n// Look for candidate start fields (order matters)\nconst candidates = [\n  input.startISO,\n  input.start && input.start.dateTime, // event objects from Google Calendar\n  input.start && input.start.date,     // all-day events\n  input.start,                         // top-level string\n  input.start_raw,\n  input.appointment && input.appointment.startISO,\n  input.appointment && input.appointment.start,\n  input.appointment && (input.appointment.date && input.appointment.time && (input.appointment.date + 'T' + input.appointment.time + ':00')),\n];\n\n// pick first non-empty candidate\nlet startRaw = null;\nfor (const c of candidates) {\n  if (c) { startRaw = c; break; }\n}\n\nif (!startRaw) {\n  throw new Error('No start candidate found. Candidates inspected: ' + JSON.stringify(candidates));\n}\n\nconst startDate = tryParseDate(startRaw);\nif (!startDate) {\n  throw new Error('Invalid start time: ' + JSON.stringify(startRaw));\n}\n\n// Build alternative times (30m and 60m after)\nconst alt1 = new Date(startDate.getTime() + 30 * 60 * 1000);\nconst alt2 = new Date(startDate.getTime() + 60 * 60 * 1000);\n\nreturn [{\n  json: {\n    alternatives: [alt1.toISOString(), alt2.toISOString()],\n    parsedStartRaw: startRaw,\n    parsedStartISO: startDate.toISOString()\n  }\n}];"
+      },
+      "id": "generate-alternatives-node",
+      "name": "Generate Alternatives",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [850, 450]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { \"success\": true, \"message\": \"Appointment created successfully\", \"event_id\": $json.id, \"html_link\": $json.htmlLink } }}"
+      },
+      "id": "respond-success-node",
+      "name": "Send Confirmation to Agent",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1050, 150]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { \"success\": false, \"conflict\": true, \"message\": \"Time conflict detected. Alternative times suggested.\", \"alternatives\": $json.alternatives } }}"
+      },
+      "id": "respond-conflict-node",
+      "name": "Send Conflict to Agent",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1050, 450]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Calendar - List (check)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calendar - List (check)": {
+      "main": [
+        [
+          {
+            "node": "IF - conflict?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF - conflict?": {
+      "main": [
+        [
+          {
+            "node": "Calendar - Create Event",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Generate Alternatives",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calendar - Create Event": {
+      "main": [
+        [
+          {
+            "node": "Send Confirmation to Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Alternatives": {
+      "main": [
+        [
+          {
+            "node": "Send Conflict to Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 1,
+  "updatedAt": "2025-11-13T00:00:00.000Z",
+  "versionId": "1"
+}
