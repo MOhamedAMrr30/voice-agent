@@ -1,177 +1,365 @@
-# Voice Automation Agent# Voice Automation Agent
+# Voice Automation Agent# Voice Automation Agent# Voice Automation Agent
 
 
 
-A voice-powered scheduling assistant for booking appointments with natural language commands (assessment project).A voice-powered scheduling assistant that lets you book appointments and manage your calendar using natural language voice commands.
+A voice-powered scheduling assistant for booking appointments with natural language commands. Designed for healthcare, clinics, and office scheduling (assessment project).
 
 
 
-## Quick Start## Features
+## FeaturesA voice-powered scheduling assistant for booking appointments with natural language commands (assessment project).A voice-powered scheduling assistant that lets you book appointments and manage your calendar using natural language voice commands.
 
 
+
+- Voice input for appointments
+
+- List available clinic/hospital schedules
+
+- Natural language date/time parsing## Quick Start## Features
+
+- Book appointments by voice
+
+- n8n webhook integration for automation
+
+- Web-based interface with speech recognition
 
 1. Install dependencies:- 🎤 Voice input for natural appointment booking
 
+## Quick Start
+
    ```bash- 📅 Calendar synchronization with n8n automation
 
-   pip install -r requirements.txt- � Appointment search and query
+1. Install dependencies:
 
-   ```- � Flexible date/time parsing
+   ```bash   pip install -r requirements.txt- � Appointment search and query
 
-- 🌐 Web interface (no installation needed)
+   pip install -r requirements.txt
 
-2. Start the server:
+   ```   ```- � Flexible date/time parsing
+
+
+
+2. Start the server:- 🌐 Web interface (no installation needed)
+
+   ```bash
+
+   python app.py2. Start the server:
+
+   ```
 
    ```bash## Quick Start
 
+3. Open `http://localhost:5000` in your browser (Chrome recommended)
+
    python app.py
+
+## Demo Usage
 
    ```### Setup
 
+### List Available Appointments
 
+Say: **"What appointments are available tomorrow?"**
+
+- App will list all clinic slots for the next day
 
 3. Open `http://localhost:5000` in your browser1. Create a virtual environment:
 
-   ```bash
+Say: **"Show me today's schedule"**
 
-4. Click **"Start Listening"** and say: "Book a meeting tomorrow at 2 PM"   python -m venv venv
-
-   source venv/bin/activate  # On Windows: venv\Scripts\activate
-
-## Features   ```
+- App displays all appointments for today   ```bash
 
 
 
-- Voice input for appointments2. Install dependencies:
+### Book an Appointment4. Click **"Start Listening"** and say: "Book a meeting tomorrow at 2 PM"   python -m venv venv
 
-- Natural language date/time parsing   ```bash
+Say: **"Book a doctor appointment tomorrow at 2 PM"**
 
-- Appointment search and management   pip install -r requirements.txt
+- App parses the time and date   source venv/bin/activate  # On Windows: venv\Scripts\activate
 
-- n8n webhook integration for automation   ```
+- Creates appointment in the system
 
-- Web-based interface
+- Confirms booking via n8n webhook## Features   ```
 
-3. Start the server:
 
-## API Endpoints   ```bash
 
-   python app.py
+Say: **"Schedule a checkup for Friday at 10 AM"**
 
-- `GET /api/schedule?date=YYYY-MM-DD` — List appointments   ```
+- Natural language parsing handles various date formats
 
-- `DELETE /api/schedule/<id>` — Delete appointment
+- Supports: "today", "tomorrow", "next Monday", dates like "January 20th"- Voice input for appointments2. Install dependencies:
+
+
+
+## Sample Clinic Data- Natural language date/time parsing   ```bash
+
+
+
+The app comes pre-loaded with sample appointments:- Appointment search and management   pip install -r requirements.txt
+
+
+
+| Doctor | Specialty | Date | Time | Location |- n8n webhook integration for automation   ```
+
+|--------|-----------|------|------|----------|
+
+| Dr. Smith | Cardiology | Nov 14 | 09:00 | Room 101 |- Web-based interface
+
+| Dr. Johnson | Pediatrics | Nov 14 | 10:00 | Room 205 |
+
+| Dr. Williams | Dentistry | Nov 14 | 14:00 | Dental Suite |3. Start the server:
+
+| Dr. Brown | Orthopedics | Nov 15 | 11:00 | Room 301 |
+
+| Dr. Davis | General Surgery | Nov 15 | 15:00 | OR 1 |## API Endpoints   ```bash
+
+
+
+## API Endpoints   python app.py
+
+
+
+- `GET /api/schedule?date=YYYY-MM-DD` — List appointments for a date- `GET /api/schedule?date=YYYY-MM-DD` — List appointments   ```
+
+- `DELETE /api/schedule/<id>` — Cancel appointment
+
+- `POST /api/search` — Search by natural language query- `DELETE /api/schedule/<id>` — Delete appointment
+
+- `POST /api/book` — Book from voice input
 
 - `POST /api/search` — Search by query4. Open your browser to `http://localhost:5000`
 
-- `POST /api/book` — Book from voice text
+### Example: List Schedule
 
-### Using the App
+```bash- `POST /api/book` — Book from voice text
 
-## Files
+curl http://localhost:5000/api/search \
 
-1. Click **"Start Listening"** to begin recording
+  -H "Content-Type: application/json" \### Using the App
 
-- `app.py` — Flask backend2. Say your appointment naturally:
+  -d '{"query": "what appointments tomorrow"}'
 
-- `index.html` — Web interface   - "Book a meeting tomorrow at 2 PM"
+```## Files
 
-- `n8n_integration.py` — n8n webhook handler   - "Schedule a doctor appointment on January 20th at 10:30 AM"
 
-- `requirements.txt` — Dependencies3. Click **"Stop & Process"** to submit
 
-4. Your appointment is created and sent to n8n for processing
+Response:1. Click **"Start Listening"** to begin recording
 
-## Notes
+```json
 
-## API Endpoints
+{- `app.py` — Flask backend2. Say your appointment naturally:
+
+  "query": "what appointments tomorrow",
+
+  "results": [- `index.html` — Web interface   - "Book a meeting tomorrow at 2 PM"
+
+    {
+
+      "id": 1,- `n8n_integration.py` — n8n webhook handler   - "Schedule a doctor appointment on January 20th at 10:30 AM"
+
+      "title": "Dr. Smith - Cardiology",
+
+      "date": "2025-11-14",- `requirements.txt` — Dependencies3. Click **"Stop & Process"** to submit
+
+      "time": "09:00",
+
+      "location": "Room 101"4. Your appointment is created and sent to n8n for processing
+
+    }
+
+  ],## Notes
+
+  "count": 1
+
+}## API Endpoints
+
+```
 
 - Data stored in memory (demo only)
 
-- Voice recognition works best in Chrome### GET /api/schedule
+### Example: Book Appointment
 
-- n8n integration requires webhook configurationRetrieve appointments
+```bash- Voice recognition works best in Chrome### GET /api/schedule
 
-```bash
+curl http://localhost:5000/api/book \
+
+  -H "Content-Type: application/json" \- n8n integration requires webhook configurationRetrieve appointments
+
+  -d '{"text": "Book a checkup tomorrow at 2 PM"}'
+
+``````bash
+
 GET /api/schedule?date=2025-01-15
-```
 
-### POST /api/schedule
-Create an appointment
-```bash
-POST /api/schedule
-{
-  "title": "Meeting",
-  "date": "2025-01-15",
-  "time": "14:00",
-  "duration": 60
-}
-```
+Response:```
 
-### POST /api/search
+```json
+
+{### POST /api/schedule
+
+  "message": "Appointment booked successfully",Create an appointment
+
+  "appointment": {```bash
+
+    "id": 6,POST /api/schedule
+
+    "title": "checkup",{
+
+    "date": "2025-11-14",  "title": "Meeting",
+
+    "time": "14:00",  "date": "2025-01-15",
+
+    "created_at": "2025-11-13T..."  "time": "14:00",
+
+  }  "duration": 60
+
+}}
+
+``````
+
+
+
+## Files### POST /api/search
+
 Search appointments
-```bash
-POST /api/search
-{
-  "query": "What's on my calendar today?"
-}
+
+- `app.py` — Flask backend with scheduling logic```bash
+
+- `index.html` — Web interface with voice recognitionPOST /api/search
+
+- `n8n_integration.py` — n8n webhook handler{
+
+- `n8n_workflow.json` — n8n workflow definition  "query": "What's on my calendar today?"
+
+- `requirements.txt` — Python dependencies}
+
 ```
-
-### POST /api/book
-Book from voice input
-```bash
-POST /api/book
-{
-  "text": "Book a meeting tomorrow at 2 PM"
-}
-```
-
-## n8n Integration
-
-The app sends appointment data to n8n via webhook for:
-- Checking calendar availability
-- Detecting scheduling conflicts
-- Creating Google Calendar events
-- Suggesting alternative times if conflicts exist
-
-### Setup n8n
-
-1. Create an n8n workflow with:
-   - Webhook node (receives appointment data)
-   - Google Calendar nodes (list and create events)
-   - IF node (check for conflicts)
-   - Function node (generate alternatives)
-
-2. Set your webhook URL:
-   ```bash
-   export N8N_WEBHOOK_URL="https://your-instance.n8n.cloud/webhook/ai-booking"
-   ```
-
-3. Import `n8n_workflow_cleaned.json` as your workflow
 
 ## Browser Support
 
+### POST /api/book
+
+Works best in **Chrome/Chromium** (best voice recognition)Book from voice input
+
+- Also supports: Edge, Safari```bash
+
+- Limited: FirefoxPOST /api/book
+
+{
+
+## Setup for Demonstration  "text": "Book a meeting tomorrow at 2 PM"
+
+}
+
+### Minimal Setup (Demo Only)```
+
+```bash
+
+# Install and run## n8n Integration
+
+pip install flask flask-cors
+
+python app.pyThe app sends appointment data to n8n via webhook for:
+
+# Open http://localhost:5000- Checking calendar availability
+
+```- Detecting scheduling conflicts
+
+- Creating Google Calendar events
+
+### Full Setup (with n8n integration)- Suggesting alternative times if conflicts exist
+
+Set environment variable for n8n webhook:
+
+```bash### Setup n8n
+
+export N8N_WEBHOOK_URL="https://your-n8n-instance/webhook/ai-booking"
+
+python app.py1. Create an n8n workflow with:
+
+```   - Webhook node (receives appointment data)
+
+   - Google Calendar nodes (list and create events)
+
+## Delivery Requirements   - IF node (check for conflicts)
+
+   - Function node (generate alternatives)
+
+### 1. GitHub Repository
+
+[Your GitHub Repository Link](https://github.com/yourusername/voice-automation-agent)2. Set your webhook URL:
+
+   ```bash
+
+To push this locally to GitHub:   export N8N_WEBHOOK_URL="https://your-instance.n8n.cloud/webhook/ai-booking"
+
+```bash   ```
+
+# Create a new repo on GitHub, then:
+
+git remote add origin https://github.com/yourusername/voice-automation-agent.git3. Import `n8n_workflow_cleaned.json` as your workflow
+
+git branch -M main
+
+git push -u origin main## Browser Support
+
+```
+
 - ✅ Chrome/Chromium (recommended)
-- ✅ Edge
+
+### 2. Screen Recording (5 min max)- ✅ Edge
+
 - ✅ Safari
-- ⚠️ Firefox (limited speech recognition)
 
-## Project Structure
+**Demo Script:**- ⚠️ Firefox (limited speech recognition)
 
-```
+1. **Intro (30s)** - Show the app interface, explain it's a voice-powered scheduling assistant
+
+2. **List Schedules (1m)** - Voice command: "What appointments are available tomorrow?" → Show results## Project Structure
+
+3. **Book Appointment (1.5m)** - Voice command: "Book a doctor appointment tomorrow at 2 PM" → Confirm booking
+
+4. **Verify (1m)** - Show the appointment was added to the schedule```
+
 voice-agent/
-├── app.py                      # Flask backend
-├── index.html                  # Web interface
-├── n8n_integration.py          # n8n webhook handler
-├── n8n_workflow_cleaned.json   # n8n workflow
-├── requirements.txt            # Dependencies
-└── README.md                   # This file
+
+**Recording Steps:**├── app.py                      # Flask backend
+
+- Open app in browser: http://localhost:5000├── index.html                  # Web interface
+
+- Start screen recording (Windows: Win+G, Mac: Cmd+Shift+5)├── n8n_integration.py          # n8n webhook handler
+
+- Use browser's voice input or say commands clearly├── n8n_workflow_cleaned.json   # n8n workflow
+
+- Show backend response/confirmation├── requirements.txt            # Dependencies
+
+- Stop recording when done└── README.md                   # This file
+
 ```
+
+**File Format:** MP4 or WebM (< 100MB)
+
+## Notes
 
 ## Notes
 
 - Appointments are stored in memory (resets on restart)
-- For production, use a database
-- Voice recognition depends on microphone quality
-- Google Calendar sync requires n8n configuration
 
+- Data stored in memory (resets on restart)- For production, use a database
+
+- Voice recognition requires microphone and modern browser- Voice recognition depends on microphone quality
+
+- n8n integration requires webhook configuration- Google Calendar sync requires n8n configuration
+
+- Sample data includes 5 clinic appointments for demo purposes
+
+
+## Assessment Context
+
+This is a demonstration project showcasing:
+- Voice-based appointment scheduling
+- Natural language parsing
+- RESTful API design
+- Frontend-backend integration
+- Workflow automation with n8n
+
+Perfect for: Hospital scheduling, clinic bookings, office appointments, demo presentations
